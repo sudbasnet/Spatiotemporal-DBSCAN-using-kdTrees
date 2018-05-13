@@ -1,11 +1,6 @@
-import heapq
-import itertools
-import operator
 import math
 import copy
-import queue
 from collections import deque
-from functools import wraps
 import fileinput
 from haversine import haversine
 from datetime import datetime, timedelta
@@ -32,9 +27,29 @@ class Node:
         self.left = left
         self.right = right
 
+    def isLeaf(self):
+        if self.left is None and self.left is None:
+            return True
+        return False
+
+    def hasLeft(self):
+        if self.left is not None:
+            return True
+        return False
+
+    def hasRight(self):
+        if self.right is not None:
+            return True
+        return False
+
+    def isNode(self):
+        if self.hasLeft() and self.hasRight:
+            return True
+        return False
+
 
 # Our comparator
-def float_compare(x, y):
+def float_compare(x,y):
     if x > y:
         return 1
     elif x == y:
@@ -49,13 +64,12 @@ def prep(file):
         info = line.split(',')
         points.append((int(info[0]), float(info[1]), float(info[2]), int(info[3])))
         # print((int(info[0]), float(info[1]), float(info[2]), int(info[3])))
-    root = generate(points)
-    return root
+    return points
 
 
 # Generate our KDTree.  Depth starts at 0 and gets incremented as we recurse
 def generate(points, tree_depth=0):
-    if points.count() == 0:
+    if points == []:
         return None
     # This is either 0, 1 or 2 since we are using a 3 dimensional space
     axis = tree_depth % 3 + 1
@@ -131,10 +145,8 @@ def get_coordinate(point, d, bearing=0):
 def get_bbox(node, distance_tuple, bearing=0):
     point = node.coords
     t = datetime.strptime(str(node.day), '%Y%m%d')
-
     d = distance_tuple[0]
     delta_t = timedelta(days=distance_tuple[1])
-
     cross_bounding = [[point, None]]
     bounding = []
     boundingbox = {}
@@ -155,10 +167,8 @@ def get_bbox(node, distance_tuple, bearing=0):
             y_min = point2[0][1]
             # starting at 0 degrees, we add 90 degree until we get points in all 4 directions
         bearing = bearing + 90
-
     t_min = int(datetime.strftime(t - delta_t, '%Y%m%d'))
     t_max = int(datetime.strftime(t + delta_t, '%Y%m%d'))
-
     bb_left_above = (x_min, y_max)
     bounding.append(bb_left_above)
     bb_left_down = (x_min, y_min)
@@ -167,7 +177,6 @@ def get_bbox(node, distance_tuple, bearing=0):
     bounding.append(bb_right_above)
     bb_right_below = (x_max, y_min)
     bounding.append(bb_right_below)
-
     boundingbox.update({"max": (x_max, y_max, t_max)})
     boundingbox.update({"min": (x_min, y_min, t_min)})
     return boundingbox
@@ -176,8 +185,8 @@ def get_bbox(node, distance_tuple, bearing=0):
 def is_valid(xyz, boundingbox):
     boundingbox_max = boundingbox["max"]
     boundingbox_min = boundingbox["min"]
-    if xyz[0] <= boundingbox_max[0] & xyz[0] >= boundingbox_min[0] & xyz[1] <= boundingbox_max[1] & xyz[2] <= \
-            boundingbox_max[2] & xyz[2] >= boundingbox_min[2]:
+    if boundingbox_min[0] <= xyz[0] <= boundingbox_max[0] and boundingbox_min[1] <= xyz[1] <= boundingbox_max[1] and \
+            boundingbox_min[2] <= xyz[2] <= boundingbox_max[2]:
         return True
     else:
         return False
@@ -188,27 +197,30 @@ def is_valid(xyz, boundingbox):
 def fixed_radius_neighbors(tree, input_node, distance):
     tree_depth = 0
     boundingbox = get_bbox(input_node, distance)
+    boundingbox_max = boundingbox["max"]
+    boundingbox_min = boundingbox["min"]
     neighbors = []
-    node_path = queue.Queue
-    node_path.put(tree)
-    while not node_path.empty():
-        current_node = node_path.get()
-        xyz = (current_node.coords[0], current_node.coords[1], tree.day)
+    node_path = deque([tree])
+    while len(node_path) > 0:
+        current_node = node_path.popleft()
+        # print("selfid: ", current_node.id)
+        xyz = (current_node.coords[0], current_node.coords[1], current_node.day)
         if is_valid(xyz, boundingbox):
-            if haversine(current_node.coords, input_node.coords) <= distance[0] & current_node.id != input_node.id:
+            if haversine(current_node.coords, input_node.coords) <= distance[0] and current_node.id != input_node.id:
                 neighbor = Node(id=current_node.id, coords=current_node.coords, day=current_node.day)
                 neighbors.append(neighbor)
-        boundingbox_max = boundingbox["max"]
-        boundingbox_min = boundingbox["min"]
         axis = tree_depth % 3
-        if boundingbox_max[axis] > xyz[axis] & boundingbox_min[axis] >= xyz[axis]:
-            node_path.put(current_node.right)
-        elif boundingbox_max[axis] <= xyz[axis] & boundingbox_min[axis] < xyz[axis]:
-            node_path.put(current_node.left)
-        elif boundingbox_max[axis] > xyz[axis] & boundingbox_min[axis] < xyz[axis]:
-            node_path.put(current_node.right)
-            node_path.put(current_node.left)
+        if boundingbox_max[axis] > xyz[axis] and boundingbox_min[axis] >= xyz[axis] and current_node.hasRight():
+            # print("Adding right")
+            node_path.append(current_node.right)
+        elif boundingbox_max[axis] <= xyz[axis] and boundingbox_min[axis] < xyz[axis] and current_node.hasLeft():
+            # print("Adding Left")
+            node_path.append(current_node.left)
+        elif boundingbox_max[axis] > xyz[axis] > boundingbox_min[axis]:
+            # print("Adding both")
+            if current_node.hasRight():
+                node_path.append(current_node.right)
+            if current_node.hasLeft():
+                node_path.append(current_node.left)
         tree_depth = tree_depth + 1
     return neighbors
-
-kdTree_object = prep('events_data_write.csv')
