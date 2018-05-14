@@ -2,8 +2,7 @@ import fileinput
 from haversine import haversine
 from datetime import datetime, timedelta
 import time
-from spatialkdtree.Node import prep
-
+from spatialkdtree import Node, prep, generate, Node, fixed_radius_neighbors, get_bbox
 
 # this script uses brute force technique
 def prep(file):
@@ -19,7 +18,7 @@ events2 = {}
 d2 = (50, 30)
 delta_t2 = timedelta(days=d2[1])
 delta_s2 = d2[0]
-dataset2 = prep('events_data_write.csv')
+dataset2 = prep('query_result.csv')
 
 
 def getnode(dd, ids):

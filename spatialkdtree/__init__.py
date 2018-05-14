@@ -41,7 +41,7 @@ def generate(points, tree_depth=0):
     # Pick the middle point of the tree to start as the root.
     median = math.floor(len(p) / 2)
     # Set this node to the first value
-    node = Node(p[median][0], p[median][1:3], p[median][3], axis - 1,  None, None)
+    node = Node.Node(p[median][0], p[median][1:3], p[median][3], axis - 1,  None, None)
     # Generate the left side of the tree.
     node.left = generate(p[0:median], tree_depth + 1)
     # Generate the right side of the tree.
@@ -143,7 +143,7 @@ def fixed_radius_neighbors(tree, input_node, distance):
         xyz = (current_node.coords[0], current_node.coords[1], current_node.day)
         if is_valid(xyz, boundingbox):
             if haversine((lat1, lon1), (lat2, lon2)) <= distance[0] and current_node.id != input_node.id:
-                neighbor = Node(id=current_node.id, coords=current_node.coords, day=current_node.day)
+                neighbor = Node.Node(id=current_node.id, coords=current_node.coords, day=current_node.day)
                 neighbors.append(neighbor)
         axis = current_node.axis
         if boundingbox_max[axis] > xyz[axis] and boundingbox_min[axis] > xyz[axis] and current_node.hasRight():
