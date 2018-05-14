@@ -1,10 +1,10 @@
-from spatialkdtree.Node import prep, generate, Node, fixed_radius_neighbors
+from spatialkdtree import Node, prep, generate, Node, fixed_radius_neighbors, get_bbox
 from time import time
 
 events = {}
 dataset = prep('events_data_write.csv')
 kdTree = generate(dataset)
-d = (100, 30)
+d = (50, 30)
 start = time()
 for i in dataset:
     nn_array = []
@@ -18,3 +18,4 @@ for i in dataset:
 end = time()
 print(end - start)
 # 4.3154637813568115
+# 3.2882208824157715
