@@ -1,6 +1,7 @@
-from spatialkdtree import Node
+from spatialkdtree.Node import Node
 import math
 import copy
+import pandas
 from collections import deque
 import fileinput
 from haversine import haversine, AVG_EARTH_RADIUS
@@ -18,18 +19,6 @@ def float_compare(x, y):
         return -1
 
 
-# reading a file, where the first 4 columns are:
-# id, longitude, latitude, date in YYYYMMDD format
-def prep(file):
-    points = []
-    for line in fileinput.input(file):
-        info = line.split(',')
-        points.append((int(info[0]), float(info[1]), float(info[2]), int(info[3])))
-        # these points are all numeric so they could be sorted faster
-        # if date contains time, use YYYYMMDDHHMMSS (they should be capable of numeric sorting)
-    return points
-
-
 # Generate our KDTree.  Depth starts at 0 and gets incremented as we recurse
 def generate(points, tree_depth=0):
     if points == []:
@@ -39,9 +28,9 @@ def generate(points, tree_depth=0):
     # Sort the points by their coordinates
     p = sorted(points, key=lambda x: float(x[axis]), reverse=False)
     # Pick the middle point of the tree to start as the root.
-    median = math.floor(len(p) / 2)
+    median = int(math.floor(len(p) / 2))
     # Set this node to the first value
-    node = Node.Node(p[median][0], p[median][1:3], p[median][3], axis - 1,  None, None)
+    node = Node(p[median][0], p[median][1:3], p[median][3], axis - 1,  None, None)
     # Generate the left side of the tree.
     node.left = generate(p[0:median], tree_depth + 1)
     # Generate the right side of the tree.
@@ -143,7 +132,7 @@ def fixed_radius_neighbors(tree, input_node, distance):
         xyz = (current_node.coords[0], current_node.coords[1], current_node.day)
         if is_valid(xyz, boundingbox):
             if haversine((lat1, lon1), (lat2, lon2)) <= distance[0] and current_node.id != input_node.id:
-                neighbor = Node.Node(id=current_node.id, coords=current_node.coords, day=current_node.day)
+                neighbor = Node(id=current_node.id, coords=current_node.coords, day=current_node.day)
                 neighbors.append(neighbor)
         axis = current_node.axis
         if boundingbox_max[axis] > xyz[axis] and boundingbox_min[axis] > xyz[axis] and current_node.hasRight():
@@ -156,3 +145,36 @@ def fixed_radius_neighbors(tree, input_node, distance):
             if current_node.hasLeft():
                 node_path.append(current_node.left)
     return neighbors
+
+
+def import_data(file, sep):
+    df = pandas.read_csv(file, sep=sep)
+    return df
+
+
+# reading a file, where the first 4 columns are:
+# id, longitude, latitude, date in YYYYMMDD format
+def prep_dataset(df):
+    points = []
+    for index, row in df.iterrows():
+        points.append((int(row[0]), float(row[1]), float(row[2]), int(row[3])))
+        # these points are all numeric so they could be sorted faster
+        # if date contains time, use YYYYMMDDHHMMSS (they should be capable of numeric sorting)
+    return points
+
+
+def get_frnn(dataset, tree, dist):
+    events_frnn = {}
+    count = 0
+    for i in dataset:
+        count +=1
+        nn_array = []
+        n = Node(i[0], (i[1], i[2]), i[3])
+        # print("check it: ", i[0], (i[1], i[2]), i[3])
+        frnn_nbrs = fixed_radius_neighbors(tree, n, dist)
+        for nbr in frnn_nbrs:
+            nn_array.append(nbr.id)
+        events_frnn.update({n.id: nn_array})
+        if count % 500 == 0:
+            print(count, " events processed.")
+    return events_frnn

@@ -8,7 +8,7 @@ setup(
     author='Sudeep Basnet',
     author_email=['sbasnet@huskers.unl.com'],
     url='https://github.com/sudbasnet/spatiotemporal-kdTree',
-    packages=['spatialkdtree'],
+    packages=['spatialkdtree', 'distancefunction', 'spatialdbscan'],
     license=['MIT'],
     classifiers=[
         'Development Status :: 3 - Alpha',
