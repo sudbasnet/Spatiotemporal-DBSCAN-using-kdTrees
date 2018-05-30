@@ -1,11 +1,20 @@
+import spatialkdtree
+import spatialdbscan
 from spatialkdtree import import_data
 from time import time
 from spatialdbscan import spatialdbscan
+from spatialkdtree import generate, prep_dataset
+import pandas as pd
 
 
 start2 = time()
-df = import_data('events_india_2014.csv', ',')
-dbscan = spatialdbscan(dataframe=df, radius=(500, 60), eps=0.2, minPts=4, distancetype=('spatial', 'temporal', 'socioeconomic', 'infrastructure'), threshold=(100, 30))
+df_st = import_data('data3_india_2014_northeast.csv', ',')
+dbscan_st = spatialdbscan(dataframe=df_st, radius=(1000, 100), eps=0.07685, minPts=4, distancetype=('spatial', 'temporal', 'socioeconomic', 'infrastructure'), threshold=(100, 30))
 print("everything finished in ", time() - start2, " seconds.")
-# 4.3154637813568115
-# 3.2882208824157715
+dataset_dbscan_st = []
+dataset = prep_dataset(df_st)
+for d in dataset:
+    dataset_dbscan_st.append([d[0], d[1], d[2], d[3], dbscan_st[d[0]]])
+
+df_st = pd.DataFrame(dataset_dbscan_st, columns=('uniqueid', 'lon', 'lat', 'event_date', 'cluster'))
+df_st.to_csv("dbscan_northeast_st.csv")

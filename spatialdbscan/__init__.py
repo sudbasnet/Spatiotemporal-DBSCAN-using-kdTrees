@@ -7,13 +7,11 @@ from time import time
 
 # this spatialdbscan takes in the events set, the frnn object created by spatialkdtree and, the eps and minPts
 # limits = (spatial threshold in km, temporal threshold in days)
-def spatialdbscan(dataframe, radius, eps, minPts, distancetype, threshold):
+def spatialdbscan(dataframe, radius, eps, minPts, distancetype, threshold, sociovar_count=0, infravar_count=0):
     start = time()
     dataset = prep_dataset(dataframe)
     print("dataset generated in ", time() - start, " seconds.")
-    # print(dataset[3])
-    events = prep_events(dataframe, sociovar_count=2, infravar_count=6)
-    # print(events[dataset[3][0]])
+    events = prep_events(dataframe, sociovar_count, infravar_count)
     start = time()
     print("generating tree")
     tree = generate(dataset)
@@ -21,11 +19,9 @@ def spatialdbscan(dataframe, radius, eps, minPts, distancetype, threshold):
     start = time()
     frnn = get_frnn(dataset, tree, radius)
     print("frnn generated in ", time() - start, " seconds.")
-    # print(frnn[dataset[3][0]])
     start = time()
     dbscan_clustering = {}
     for key, event in events.items():
-        # print("wtf")
         dbscan_clustering.update({key: 0})
     visited = []
     print("dbscan object generated in ", time() - start, " seconds.")
@@ -41,7 +37,6 @@ def spatialdbscan(dataframe, radius, eps, minPts, distancetype, threshold):
                 frnn_neighbors = frnn[current_event_id]
                 neighbors = [current_event_id]
                 for frnn_n in frnn_neighbors:
-                    # if frnn_n not in visited:
                     d = distancefunction(events[current_event_id], events[frnn_n], distancetype, threshold)
                     if d <= eps:
                         neighbors.append(frnn_n)

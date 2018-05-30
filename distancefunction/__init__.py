@@ -20,12 +20,10 @@ def prep_events(df, sociovar_count=0, infravar_count=0):
         id = int(row[0])
         lon = float(row[1])
         lat = float(row[2])
-        # print(row[0], row[1], row[2], row[3])
         event_date = datetime.strptime(str(int(row[3])), '%Y%m%d')
         population = float(row[4])
         if (sociovar_count + infravar_count) > 0:
             socioeconomic = row[5:(5 + sociovar_count)]
-            print(row[5:(4 + sociovar_count)])
             infrastructure = {}
             infrastructure.update({"proximity": row[4 + sociovar_count + 1: 4 + sociovar_count + 1 + infravar_count]})
             infrastructure.update({"density": row[5 + sociovar_count + infravar_count: 6 + sociovar_count + 2 * infravar_count]})
@@ -38,25 +36,20 @@ def prep_events(df, sociovar_count=0, infravar_count=0):
 
 
 def distancefunction(event1, event2, distancetype, threshold):
-    d = {}
+    dist = {}
     d_spatial = haversine((event1.lat, event1.lon), (event2.lat, event2.lon))
     socioeconomic1, socioeconomic2 = event1.socioeconomic, event2.socioeconomic
     socioeconomic_var_count = event1.get_sociovar_count()
     infrastructure_var_count = event1.get_infravar_count()
-    # print("socioeconomic1: ", socioeconomic1, ", socioeconomic2: ", socioeconomic2, ", socioeconomic_var_count: ", socioeconomic_var_count, ", infrastructure_var_count: ", infrastructure_var_count)
     d_socioeconomic = 0
     if event1.socioeconomic is not None:
         for i in range(socioeconomic_var_count):
             # calculating socioeconomic distance with equal weight for each variable
-            # print("socioeconomic1[i]", socioeconomic1[i])
-            # print("socioeconomic2[i]", socioeconomic2[i])
             d_socioeconomic = d_socioeconomic + (abs(socioeconomic1[i] - socioeconomic2[i])/socioeconomic_var_count)
     d_infrastructure = 0
     if event1.infrastructure is not None:
         infra1_proximity, infra1_density = event1.infrastructure["proximity"], event1.infrastructure["density"]
         infra2_proximity, infra2_density = event2.infrastructure["proximity"], event2.infrastructure["density"]
-        # print("infra1_proximity, infra1_density, infra2_proximity, infra2_density")
-        # print(infra1_proximity, infra1_density, infra2_proximity, infra2_density)
         for i in range(infrastructure_var_count):
             # calculating infrastructure distances with equal weight for each variable
             d_infrastructure = d_infrastructure + \
@@ -98,7 +91,7 @@ def distancefunction(event1, event2, distancetype, threshold):
     else:
         d_temporal_normalized = d_temporal_directional / threshold[1]
 
-    d.update({'spatial': d_spatial_normalized, 'temporal': d_temporal_normalized, 'infrastructure':d_infrastructure,
+    dist.update({'spatial': d_spatial_normalized, 'temporal': d_temporal_normalized, 'infrastructure':d_infrastructure,
               'socioeconomic': d_socioeconomic})
 
     wt_temporal = main_event.population / (main_event.population + second_event.population + 1)
@@ -111,20 +104,19 @@ def distancefunction(event1, event2, distancetype, threshold):
         distances = len(distancetype) - 1
         d_final = d_spatiotemporal / distances
         if 'socioeconomic' in distancetype:
-            d_final = d_final + (d["socioeconomic"] / distances)
+            d_final = d_final + (dist["socioeconomic"] / distances)
         if 'infrastructure' in distancetype:
-            d_final = d_final + (d["infrastructure"] / distances)
+            d_final = d_final + (dist["infrastructure"] / distances)
     else:
         distances = len(distancetype)
         if 'spatial' in distancetype:
-            d_final = d_final + (d["spatial"] / distances)
+            d_final = d_final + (dist["spatial"] / distances)
         if 'temporal' in distancetype:
-            d_final = d_final + (d["temporal"] / distances)
+            d_final = d_final + (dist["temporal"] / distances)
         if 'socioeconomic' in distancetype:
-            d_final = d_final + (d["socioeconomic"] / distances)
+            d_final = d_final + (dist["socioeconomic"] / distances)
         if 'infrastructure' in distancetype:
-            d_final = d_final + (d["infrastructure"] / distances)
-    print("distances: ", distances)
+            d_final = d_final + (dist["infrastructure"] / distances)
     return d_final
 
 

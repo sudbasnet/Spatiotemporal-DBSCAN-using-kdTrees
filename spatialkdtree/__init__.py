@@ -170,7 +170,6 @@ def get_frnn(dataset, tree, dist):
         count +=1
         nn_array = []
         n = Node(i[0], (i[1], i[2]), i[3])
-        # print("check it: ", i[0], (i[1], i[2]), i[3])
         frnn_nbrs = fixed_radius_neighbors(tree, n, dist)
         for nbr in frnn_nbrs:
             nn_array.append(nbr.id)
