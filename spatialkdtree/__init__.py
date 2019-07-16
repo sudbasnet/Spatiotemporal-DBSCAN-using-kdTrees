@@ -4,9 +4,10 @@ import copy
 import pandas
 from collections import deque
 import fileinput
-from haversine import haversine, AVG_EARTH_RADIUS
+from haversine import haversine
 from datetime import datetime, timedelta
 
+AVG_EARTH_RADIUS = 6371.0088
 
 # Our comparator
 # this is used for sorting the data frame
@@ -71,6 +72,7 @@ def get_coordinate(point, d, bearing=0):
                              math.sin(lat1) * math.sin(lat2))
     lon2, lat2 = map(math.degrees, [lon2, lat2])
     point2 = (lon2, lat2)
+    # print(point2)
     return point2
 
 
@@ -88,7 +90,10 @@ def get_bbox(node, distance_tuple, bearing=0):
     y_max = point[1]
     y_min = point[1]
     for x in range(4):  # 4 different directions
+        # print(bearing)
+        # print(point)
         point2 = [get_coordinate(point, d, bearing), bearing]
+        # print(point2)
         cross_bounding.append(point2)
         if x_max < point2[0][0]:
             x_max = point2[0][0]

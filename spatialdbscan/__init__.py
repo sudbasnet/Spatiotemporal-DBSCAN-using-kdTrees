@@ -7,7 +7,7 @@ from time import time
 
 # this spatialdbscan takes in the events set, the frnn object created by spatialkdtree and, the eps and minPts
 # limits = (spatial threshold in km, temporal threshold in days)
-def spatialdbscan(dataframe, radius, eps, minPts, distancetype, threshold, sociovar_count=0, infravar_count=0):
+def spatialdbscan(dataframe, radius, eps, minPts, distancetype, threshold, sociovar_count=0, infravar_count=0, calculate_all=False):
     start = time()
     dataset = prep_dataset(dataframe)
     print("dataset generated in ", time() - start, " seconds.")
@@ -37,7 +37,11 @@ def spatialdbscan(dataframe, radius, eps, minPts, distancetype, threshold, socio
                 frnn_neighbors = frnn[current_event_id]
                 neighbors = [current_event_id]
                 for frnn_n in frnn_neighbors:
-                    d = distancefunction(events[current_event_id], events[frnn_n], distancetype, threshold)
+                    d_dict = distancefunction(events[current_event_id], events[frnn_n], distancetype, threshold)
+                    d = 0
+                    l = len(d_dict)
+                    for d_type, dist in d_dict.items():
+                        d = d + (dist / l)
                     if d <= eps:
                         neighbors.append(frnn_n)
                 if len(neighbors) >= minPts:

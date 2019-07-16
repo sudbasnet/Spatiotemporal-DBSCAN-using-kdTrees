@@ -97,27 +97,30 @@ def distancefunction(event1, event2, distancetype, threshold):
     wt_temporal = main_event.population / (main_event.population + second_event.population + 1)
     wt_spatial = 1 - wt_temporal
     d_spatiotemporal = 0
-    distances = 1
-    d_final = 0
+    # distances = 1
+    # d_final = 0
     if 'spatial' in distancetype and 'temporal' in distancetype:
         d_spatiotemporal = (d_spatial_normalized * wt_spatial) + (d_temporal_normalized * wt_temporal)
-        distances = len(distancetype) - 1
-        d_final = d_spatiotemporal / distances
-        if 'socioeconomic' in distancetype:
-            d_final = d_final + (dist["socioeconomic"] / distances)
-        if 'infrastructure' in distancetype:
-            d_final = d_final + (dist["infrastructure"] / distances)
-    else:
-        distances = len(distancetype)
-        if 'spatial' in distancetype:
-            d_final = d_final + (dist["spatial"] / distances)
-        if 'temporal' in distancetype:
-            d_final = d_final + (dist["temporal"] / distances)
-        if 'socioeconomic' in distancetype:
-            d_final = d_final + (dist["socioeconomic"] / distances)
-        if 'infrastructure' in distancetype:
-            d_final = d_final + (dist["infrastructure"] / distances)
-    return d_final
+        dist.update({'spatiotemporal': d_spatiotemporal})
+        dist.pop('spatial')
+        dist.pop('temporal')
+        # distances = len(distancetype) - 1
+        # d_final = d_spatiotemporal / distances
+        # if 'socioeconomic' in distancetype:
+        #     d_final = d_final + (dist["socioeconomic"] / distances)
+        # if 'infrastructure' in distancetype:
+        #     d_final = d_final + (dist["infrastructure"] / distances)
+    # else:
+    #     distances = len(distancetype)
+    #     if 'spatial' in distancetype:
+    #         d_final = d_final + (dist["spatial"] / distances)
+    #     if 'temporal' in distancetype:
+    #         d_final = d_final + (dist["temporal"] / distances)
+    #     if 'socioeconomic' in distancetype:
+    #         d_final = d_final + (dist["socioeconomic"] / distances)
+    #     if 'infrastructure' in distancetype:
+    #         d_final = d_final + (dist["infrastructure"] / distances)
+    return dist
 
 
 

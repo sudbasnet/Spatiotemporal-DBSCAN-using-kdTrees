@@ -2,7 +2,7 @@ import fileinput
 from haversine import haversine
 from datetime import datetime, timedelta
 import time
-from spatialkdtree import Node, prep, generate, Node, fixed_radius_neighbors, get_bbox
+from spatialkdtree import Node, generate, Node, fixed_radius_neighbors, get_bbox
 
 
 # this script uses brute force technique
